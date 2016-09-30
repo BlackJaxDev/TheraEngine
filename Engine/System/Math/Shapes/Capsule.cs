@@ -30,9 +30,9 @@ namespace System
             }
             return false;
         }
-        public EContainsShape ContainsBox(Box box)
+        public ContainsShape ContainsBox(Box box)
         {
-            return EContainsShape.No;
+            return ContainsShape.No;
         }
         public float GetTotalHalfHeight()
         {

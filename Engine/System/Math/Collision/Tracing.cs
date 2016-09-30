@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using eyecm.PhysX;
 
-namespace CustomEngine.System.Collision
+namespace CustomEngine.Collision
 {
     public delegate void OnTraceHit(HitInfo hit);
     public class HitInfo

@@ -3,12 +3,6 @@ using CustomEngine;
 
 namespace System
 {
-    public enum EContainsShape
-    {
-        Yes,
-        Partial,
-        No
-    }
     public class Box : IRenderable
     {
         public Vector3 _min, _max;
@@ -45,11 +39,11 @@ namespace System
         }
         public bool ContainsPoint(Vector3 point)
         {
-            return point.IsLequalTo(_max) && point.IsGequalTo(_min);
+            return point <= _max && point >= _min;
         }
-        public EContainsShape ContainsBox(Box box)
+        public ContainsShape ContainsBox(Box box)
         {
-            return EContainsShape.No;
+            return ContainsShape.No;
         }
         /// <summary>
         /// T = top, B = bottom
