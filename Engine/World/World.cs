@@ -14,20 +14,25 @@ namespace CustomEngine.Worlds
         protected List<Map> _allMaps;
 
         private Scene _physicsScene;
-        private WorldDefaults _defaults;
-        private WorldSettings _settings;
+        public WorldDefaults _defaults;
+        public WorldSettings _settings;
         private string _name;
         private bool _visible;
 
         public int ActorCount { get { return _spawnedActors.Count; } }
 
-        public World(string name, string filePath)
+        public World(string filePath)
         {
-            _name = name;
             _filePath = filePath;
             _isLoaded = false;
+            _physicsScene = new Scene();
         }
-
+        public void RebaseOrigin(Vector3 newOrigin)
+        {
+            _physicsScene.ShiftOrigin();
+            foreach (Actor a in _spawnedActors)
+                a.OnOriginRebased(newOrigin);
+        }
         public void SpawnActor(Actor actor)
         {
             if (!_spawnedActors.Contains(actor))
@@ -40,8 +45,19 @@ namespace CustomEngine.Worlds
                 _spawnedActors.Remove(actor);
             actor.OnDespawned();
         }
+        public delegate void PhysicsTick(float subDeltaTime);
+        public event PhysicsTick PrePhysicsTick;
+        public event PhysicsTick PostPhysicsTick;
         public void Update()
         {
+            float delta = Engine.UpdateDelta / Engine.PhysicsSubsteps;
+            for (int i = 0; i < Engine.PhysicsSubsteps; i++)
+            {
+                PrePhysicsTick?.Invoke(delta);
+                _physicsScene.Simulate(delta);
+                _physicsScene.FetchResults(SimulationStatuses.AllFinished, true);
+                PostPhysicsTick?.Invoke(delta);
+            }
             foreach (Actor actor in _spawnedActors)
                 actor.Update();
         }
