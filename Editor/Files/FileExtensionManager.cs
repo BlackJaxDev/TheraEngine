@@ -68,6 +68,11 @@ namespace CustomEngine.Files
             return GetCompleteFilter(GetInfo(extensions));
         }
 
+        public static string GetCompleteFilter(params Type[] types)
+        {
+            return GetCompleteFilter(GetInfo(extensions));
+        }
+
         public static string GetCompleteFilter(SupportedFileInfo[] files)
         {
             if (files.Length == 0)
