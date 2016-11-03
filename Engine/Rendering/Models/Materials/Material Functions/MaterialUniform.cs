@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public abstract class MaterialParameter : MaterialFunction
+    public abstract class MaterialUniform : MaterialFunction
     {
         public GLVar InputUniform { get { return OutputArguments[0]; } }
 
-        public MaterialParameter(GLVar inputUniform) : base()
+        public MaterialUniform(GLVar inputUniform) : base()
         {
             AddOutput(inputUniform);
         }

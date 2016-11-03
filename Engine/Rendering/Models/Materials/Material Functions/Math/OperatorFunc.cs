@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public class Vec3Parameter : MaterialParameter
+    public class FloatUniform : MaterialUniform
     {
-        public Vec3Parameter(GLVar inputUniform) : base(inputUniform)
+        public FloatUniform(GLFloat inputUniform) : base(inputUniform)
         {
 
         }
@@ -17,11 +17,10 @@ namespace CustomEngine.Rendering.Models.Materials
         {
             return new List<string>()
             {
-                "vector3",
-                "vec3",
-                "float3",
-                "three",
-                "parameter"
+                "scalar",
+                "float",
+                "single",
+                "parameter",
             };
         }
     }

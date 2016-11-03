@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public class Vec2Parameter : MaterialParameter
+    public class Vec4Uniform : MaterialUniform
     {
-        public Vec2Parameter(GLVar inputUniform) : base(inputUniform)
+        public Vec4Uniform(GLVec4 inputUniform) : base(inputUniform)
         {
 
         }
@@ -17,11 +17,12 @@ namespace CustomEngine.Rendering.Models.Materials
         {
             return new List<string>()
             {
-                "vector2",
-                "vec2",
-                "float2",
-                "two",
-                "parameter"
+                "vector4",
+                "vec4",
+                "float4",
+                "four",
+                "parameter",
+                "RGBA",
             };
         }
     }

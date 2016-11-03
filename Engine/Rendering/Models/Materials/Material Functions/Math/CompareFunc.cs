@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public class FloatParameter : MaterialParameter
+    public class FloatUniform : MaterialUniform
     {
-        public FloatParameter(GLVar inputUniform) : base(inputUniform)
+        public FloatUniform(GLFloat inputUniform) : base(inputUniform)
         {
 
         }
@@ -19,6 +19,7 @@ namespace CustomEngine.Rendering.Models.Materials
             {
                 "scalar",
                 "float",
+                "single",
                 "parameter",
             };
         }

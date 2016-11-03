@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public class Vec4Parameter : MaterialParameter
+    public class Vec3Uniform : MaterialUniform
     {
-        public Vec4Parameter(GLVar inputUniform) : base(inputUniform)
+        public Vec3Uniform(GLVec3 inputUniform) : base(inputUniform)
         {
 
         }
@@ -21,7 +21,12 @@ namespace CustomEngine.Rendering.Models.Materials
                 "vec3",
                 "float3",
                 "three",
-                "parameter"
+                "parameter",
+                "RGB",
+                "direction",
+                "normal",
+                "position",
+                "location",
             };
         }
     }

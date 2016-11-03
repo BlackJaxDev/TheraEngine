@@ -20,7 +20,5 @@ namespace CustomEngine.Rendering.Models.Materials
         {
             _layoutId = layoutId;
         }
-
-
     }
 }
