@@ -41,13 +41,22 @@ namespace CustomEngine.Rendering.Models.Materials
         _mat3,
         _mat4,
     }
-    public class GLVar : IGLVarOwner
+    public abstract class GLVar : IGLVarOwner
     {
         protected IGLVarOwner _owner;
-        protected GLTypeName _typeName;
         protected string _name;
-        protected bool _isArrayType;
-        protected List<GLSubVar> _fields = new List<GLSubVar>();
+        protected Dictionary<string, GLSubVar> _fields = new Dictionary<string, GLSubVar>();
+
+        public IGLVarOwner Owner { get { return _owner; } }
+        public abstract GLTypeName TypeName { get; }
+        public string Name
+        {
+            get { return _name; }
+            set
+            {
+                _name = Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(value).ReplaceWhitespace("");
+            }
+        }
 
         private GLTypeName GetSubType(GLTypeName type)
         {
@@ -67,15 +76,9 @@ namespace CustomEngine.Rendering.Models.Materials
             }
         }
 
-        public GLVar(
-            GLTypeName typeName, 
-            string userName, 
-            IGLVarOwner owner,
-            bool isArray = false)
+        public GLVar(string userName, IGLVarOwner owner)
         {
-            _typeName = typeName;
             _owner = owner;
-            _isArrayType = isArray;
             Name = userName;
             GLTypeName t;
             switch (typeName)
@@ -129,74 +132,7 @@ namespace CustomEngine.Rendering.Models.Materials
                     break;
             }
         }
-        public GLTypeName TypeName { get { return _typeName; } }
-        public string Name
-        {
-            get { return _name; }
-            set
-            {
-                _name = Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(value).ReplaceWhitespace("");
-            }
-        }
 
-        public bool IsOutput { get { return _isOutput; } }
-        public IGLVarOwner Owner { get { return _owner; } }
-
-        public GLVar Prev
-        {
-            get
-            {
-                if (_isOutput)
-                    throw new Exception("Assumed this was an input var.");
-                return ConnectedTo;
-            }
-            set
-            {
-                if (_isOutput)
-                    throw new Exception("Assumed this was an input var.");
-                ConnectedTo = value;
-            }
-        }
-        public GLVar Next
-        {
-            get
-            {
-                if (!_isOutput)
-                    throw new Exception("Assumed this was an output var.");
-                return ConnectedTo;
-            }
-            set
-            {
-                if (!_isOutput)
-                    throw new Exception("Assumed this was an output var.");
-                ConnectedTo = value;
-            }
-        }
-        protected GLVar ConnectedTo
-        {
-            get { return _connectedTo; }
-            set { _connectedTo = FindConnectable(value, this); }
-        }
-        /// <summary>
-        /// Finds 
-        /// </summary>
-        public GLVar FindConnectable(GLVar target, GLVar compared)
-        {
-            if (target.CanConnectTo(compared))
-                return target;
-            foreach (GLVar v in _fields)
-                if (FindConnectable(v, compared) != null)
-                    return v;
-            return null;
-        }
-        public bool CanConnectTo(GLVar other)
-        {
-            if (other.IsOutput == _isOutput)
-                return false;
-            if (other._typeName != _typeName)
-                return false;
-            return true;
-        }
         /// <summary>
         /// Ex: layout (location = 0) uniform float potato;
         /// </summary>
