@@ -20,25 +20,17 @@ namespace CustomEngine.Rendering.Models.Materials
         {
             
         }
-
-        protected override List<GLArgument> GetOutputArguments()
-        {
-            return new List<GLArgument>()
-            {
-                new GLArgument(GLTypeName._float, "Value", )
-            };
-        }
-
         public static MaterialFuncInfo GetInfo()
         {
             return new MaterialFuncInfo(
+                "Constants",
                 "Hardcodes a consant, unchanging value in the shader.", 
                 "constant scalar float single parameter");
         }
 
         protected override string GetOperation()
         {
-            return "{0} = " + _value.ToString() + ";";
+            return _value.ToString();
         }
     }
 }

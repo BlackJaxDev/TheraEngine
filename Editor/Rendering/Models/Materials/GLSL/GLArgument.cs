@@ -8,8 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public interface IGLArgument { Type GetArgType(); }
-    public class GLArgument<T> : BaseGLArgument, IGLArgument where T : GLVar
+    public class GLArgument<T> : BaseGLArgument where T : GLVar
     {
         public GLArgument(string name) : base(name) { }
 
@@ -23,6 +22,9 @@ namespace CustomEngine.Rendering.Models.Materials
                     _connectedTo = value;
             }
         }
-        public Type GetArgType() { return typeof(T); }
+        public override Type[] GetArgType()
+        {
+            return new Type[] { typeof(T) };
+        }
     }
 }
