@@ -44,48 +44,16 @@ namespace CustomEngine.Worlds.Actors
         public EMouseButton _type;
         public ComboModifier _modifiers;
     }
-    public class CameraPawn : Pawn
+    public class FlyingCameraPawn : Pawn
     {
-        Dictionary<ComboModifier, Action<bool>> _combos = new Dictionary<ComboModifier, Action<bool>>();
-
-        private ComboModifier GetModifier(EMouseButton button, bool alt, bool ctrl, bool shift)
-        {
-            ComboModifier mod = ComboModifier.None;
-
-            if (button == EMouseButton.LeftClick)
-                mod |= ComboModifier.LeftClick;
-            else if (button == EMouseButton.RightClick)
-                mod |= ComboModifier.RightClick;
-            else if (button == EMouseButton.MiddleClick)
-                mod |= ComboModifier.MiddleClick;
-
-            if (_ctrl)
-                mod |= ComboModifier.Ctrl;
-            if (_alt)
-                mod |= ComboModifier.Alt;
-            if (_shift)
-                mod |= ComboModifier.Shift;
-
-            return mod;
-        }
-        public void SetInputCombo(Action<bool> func, EMouseButton button, bool alt, bool ctrl, bool shift)
-        {
-            ComboModifier mod = GetModifier(button, alt, ctrl, shift);
-            if (mod != ComboModifier.None)
-                if (_combos.ContainsKey(mod))
-                    _combos[mod] = func;
-                else
-                    _combos.Add(mod, func);
-        }
-
         float _linearRight = 0.0f, _linearForward = 0.0f, _linearUp = 0.0f;
         float 
             _scrollSpeed = 2.0f, 
             _mouseRotateSpeed = 0.2f,
             _mouseTranslateSpeed = 1.0f,
-            _gamepadRotateSpeed = 0.6f,
-            _gamepadTranslateSpeed = 2.0f,
-            _keyboardTranslateSpeed = 1.0f;
+            _gamepadRotateSpeed = 150.0f,
+            _gamepadTranslateSpeed = 30.0f,
+            _keyboardTranslateSpeed = 15.0f;
 
         float _pitch = 0.0f, _yaw = 0.0f;
         bool _rotating = false;
@@ -93,8 +61,8 @@ namespace CustomEngine.Worlds.Actors
         bool _ctrl = false, _alt = false, _shift = false;
         Vec2 _cursorPos = Vec2.Zero;
 
-        public CameraPawn() : base() { }
-        public CameraPawn(PlayerIndex possessor) : base(possessor) { }
+        public FlyingCameraPawn() : base() { }
+        public FlyingCameraPawn(PlayerIndex possessor) : base(possessor) { }
 
         CameraComponent CameraComponent { get { return RootComponent as CameraComponent; } }
         protected override void SetDefaults()
@@ -241,5 +209,37 @@ namespace CustomEngine.Worlds.Actors
             CameraComponent.Camera.Rotate(_yaw * delta, _pitch * delta);
             HighlightScene(true);
         }
+
+        //Dictionary<ComboModifier, Action<bool>> _combos = new Dictionary<ComboModifier, Action<bool>>();
+
+        //private ComboModifier GetModifier(EMouseButton button, bool alt, bool ctrl, bool shift)
+        //{
+        //    ComboModifier mod = ComboModifier.None;
+
+        //    if (button == EMouseButton.LeftClick)
+        //        mod |= ComboModifier.LeftClick;
+        //    else if (button == EMouseButton.RightClick)
+        //        mod |= ComboModifier.RightClick;
+        //    else if (button == EMouseButton.MiddleClick)
+        //        mod |= ComboModifier.MiddleClick;
+
+        //    if (_ctrl)
+        //        mod |= ComboModifier.Ctrl;
+        //    if (_alt)
+        //        mod |= ComboModifier.Alt;
+        //    if (_shift)
+        //        mod |= ComboModifier.Shift;
+
+        //    return mod;
+        //}
+        //public void SetInputCombo(Action<bool> func, EMouseButton button, bool alt, bool ctrl, bool shift)
+        //{
+        //    ComboModifier mod = GetModifier(button, alt, ctrl, shift);
+        //    if (mod != ComboModifier.None)
+        //        if (_combos.ContainsKey(mod))
+        //            _combos[mod] = func;
+        //        else
+        //            _combos.Add(mod, func);
+        //}
     }
 }

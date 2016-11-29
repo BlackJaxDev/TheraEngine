@@ -6,7 +6,6 @@ namespace CustomEngine.Rendering.Textures
     public class DecalActor : Actor
     {
         private DecalComponent _decalComponent;
-
         public DecalComponent DecalComponent
         {
             get { return _decalComponent; }

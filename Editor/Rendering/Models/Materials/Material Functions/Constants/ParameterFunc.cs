@@ -6,31 +6,34 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public class UniformFloatFunc : MaterialFunction
+    public interface IParameterFunc
     {
-        float _value;
+        void SetUniform();
+    }
+    public class ParameterFunc<T> : MaterialFunction, IParameterFunc where T : GLVar
+    {
+        public ParameterFunc() : base() { }
+        public ParameterFunc(T value) { _value = value; }
         
-        public float Value
+        T _value;
+
+        public T Value
         {
             get { return _value; }
             set { _value = value; }
-        }
-
-        public ConstFloatFunc() : base()
-        {
-            
         }
         public static MaterialFuncInfo GetInfo()
         {
             return new MaterialFuncInfo(
                 "Constants",
-                "Hardcodes a consant, unchanging value in the shader.", 
-                "constant scalar float single parameter");
+                "Provides a constant value to the shader.", 
+                "constant scalar parameter");
         }
-
         protected override string GetOperation()
         {
             return _value.ToString();
         }
+
+        public void SetUniform() { Value?.SetUniform(); }
     }
 }
