@@ -14,6 +14,8 @@ namespace CustomEngine.Rendering.Models.Materials
         private GLTypeName _currentArgType = GLTypeName.Invalid;
         GLTypeName[] _allowedArgTypes;
 
+        public override bool IsOutput { get { return false; } }
+
         public GLMultiArgument(string name, params GLTypeName[] types) : base(name)
         {
             _allowedArgTypes = types;
@@ -76,6 +78,16 @@ namespace CustomEngine.Rendering.Models.Materials
         public override GLTypeName GetArgType()
         {
             return CurrentArgumentType;
+        }
+
+        public override void ClearConnection(BaseGLArgument other)
+        {
+            if (_connectedTo == null || _connectedTo != other)
+                return;
+
+            BaseGLArgument o = _connectedTo;
+            _connectedTo = null;
+            o.ClearConnection(this);
         }
     }
 }

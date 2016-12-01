@@ -23,6 +23,8 @@ namespace System
         public void Render() { _head?.Render(); }
         public void Cull(Frustum frustum) { _head?.Cull(frustum); }
         public List<RenderableObject> FindClosest(Vec3 point) { return _head.FindClosest(point); }
+        public List<RenderableObject> FindAllJustOutside(Shape shape) { return _head.FindAllJustOutside(shape); }
+        public List<RenderableObject> FindAllInside(Shape shape) { return _head.FindAllInside(shape); }
         public void Add(RenderableObject value)
         {
             if (_head == null)
@@ -103,6 +105,33 @@ namespace System
                 else
                     return null;
             }
+            public List<RenderableObject> FindAllJustOutside(Shape shape)
+            {
+                foreach (OctreeNode node in _subNodes)
+                    if (node != null)
+                    {
+                        EContainment c = node._bounds.Contains(shape);
+                        if (c == EContainment.Contains)
+                            return node.FindAllJustOutside(shape);
+                    }
+
+                return CollectChildren();
+            }
+
+            public List<RenderableObject> CollectChildren()
+            {
+                List<RenderableObject> list = _items;
+                foreach (OctreeNode node in _subNodes)
+                    if (node != null)
+                        list.AddRange(node.CollectChildren());
+                return list;
+            }
+
+            public List<RenderableObject> FindAllInside(Shape shape)
+            {
+                throw new NotImplementedException();
+            }
+
             public void Cull(Frustum frustum)
             {
                 EContainment c = frustum.Contains(_bounds);
