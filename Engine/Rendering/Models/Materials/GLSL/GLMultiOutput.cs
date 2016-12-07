@@ -8,34 +8,72 @@ using System.Text.RegularExpressions;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public class GLMultiOutput : BaseGLMultiInput
+    public class GLMultiOutput : BaseGLOutput
     {
-        protected List<BaseGLArgument> _connectedTo = new List<BaseGLArgument>();
+        public List<IGLMultiArgument> SyncedArguments { get { return _syncedArgs; } }
+        public GLTypeName[] AllowedArgumentTypes { get { return _allowedArgTypes; } }
+        public GLTypeName CurrentArgumentType { get { return _currentArgType; } }
 
-        public override bool IsOutput { get { return false; } }
+        private List<IGLMultiArgument> _syncedArgs = new List<IGLMultiArgument>();
+        private GLTypeName[] _allowedArgTypes = null;
+        private GLTypeName _currentArgType = GLTypeName.Invalid;
 
         public GLMultiOutput(string name, params GLTypeName[] types) : base(name)
         {
             _allowedArgTypes = types;
         }
-        public GLMultiOutput(string name, BaseGLMultiInput linkedMultiArg) : base(name, linkedMultiArg)
+        public GLMultiOutput(string name, MaterialFunction parent, params GLTypeName[] types) : base(name, parent)
+        {
+            _allowedArgTypes = types;
+        }
+        public GLMultiOutput(string name, IGLMultiArgument linkedMultiArg) : base(name)
         {
             _syncedArgs.Add(linkedMultiArg);
-            _allowedArgTypes = linkedMultiArg._allowedArgTypes;
+            _allowedArgTypes = linkedMultiArg.AllowedArgumentTypes;
         }
-        public override void ClearConnection(BaseGLArgument other)
+        public GLMultiOutput(string name, MaterialFunction parent, IGLMultiArgument linkedMultiArg) : base(name, parent)
         {
-            if (_connectedTo == null || _connectedTo != other)
-                return;
-
-            BaseGLArgument o = _connectedTo;
-            _connectedTo = null;
-            o.ClearConnection(this);
+            _syncedArgs.Add(linkedMultiArg);
+            _allowedArgTypes = linkedMultiArg.AllowedArgumentTypes;
         }
-
-        protected override void DoConnection(BaseGLArgument other)
+        public void SetSyncedArguments(params IGLMultiArgument[] args)
         {
-            throw new NotImplementedException();
+            _syncedArgs = args.ToList();
+        }
+        public override GLTypeName GetArgType() { return CurrentArgumentType; }
+        public override bool CanConnectTo(BaseGLArgument other)
+        {
+            if (other == null || other.IsOutput == IsOutput)
+                return false;
+
+            GLTypeName otherType = other.GetArgType();
+
+            //Edge case: the other node is just invalid
+            if (otherType == GLTypeName.Invalid && !(other is GLMultiInput))
+                return false;
+
+            GLTypeName thisType = GetArgType();
+            if (thisType != GLTypeName.Invalid)
+            {
+                if (otherType != GLTypeName.Invalid)
+                    return thisType == otherType;
+
+                //Has to be a GLMultiArgument as per the edge case check above
+                GLMultiInput otherMultiArg = (GLMultiInput)other;
+
+                return otherMultiArg.AllowedArgumentTypes.Contains(thisType);
+            }
+            else //this type is invalid, use allowed arg types
+            {
+                if (otherType != GLTypeName.Invalid)
+                    return _allowedArgTypes.Contains(otherType);
+
+                //Has to be a GLMultiArgument as per the edge case check above
+                GLMultiInput otherMultiArg = (GLMultiInput)other;
+
+                //Returns true if there are any matching allowed types between the two
+                return _allowedArgTypes.Intersect(otherMultiArg.AllowedArgumentTypes).ToArray().Length != 0;
+            }
         }
     }
 }
