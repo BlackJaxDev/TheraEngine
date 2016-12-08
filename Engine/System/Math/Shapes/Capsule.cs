@@ -167,5 +167,10 @@ namespace System
         {
             throw new NotImplementedException();
         }
+
+        public override EContainment Contains(Cone cone)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
