@@ -11,33 +11,50 @@ namespace CustomEngine.Rendering.Models.Materials
     /// </summary>
     public class OneMinusFunc : MaterialFunction
     {
-        public GLInput InputValue { get { return InputArguments[0]; } }
-        
-        public OneMinusFunc() : base()
-        {
-            _inline = true;
-        }
+        GLInput InputValue;
+
+        public OneMinusFunc() : base(true) { }
         protected override string GetOperation()
         {
             switch (InputValue.CurrentArgumentType)
             {
                 case GLTypeName._float:
+                case GLTypeName._double:
                     return "1.0 - {0}";
+                case GLTypeName._int:
+                case GLTypeName._uint:
+                    return "1 - {0}";
                 case GLTypeName._vec2:
                     return "vec2(1.0) - {0}";
+                case GLTypeName._dvec2:
+                    return "dvec2(1.0) - {0}";
+                case GLTypeName._ivec2:
+                    return "ivec2(1) - {0}";
+                case GLTypeName._uvec2:
+                    return "uvec2(1) - {0}";
                 case GLTypeName._vec3:
                     return "vec3(1.0) - {0}";
+                case GLTypeName._dvec3:
+                    return "dvec3(1.0) - {0}";
+                case GLTypeName._ivec3:
+                    return "ivec3(1) - {0}";
+                case GLTypeName._uvec3:
+                    return "uvec3(1) - {0}";
                 case GLTypeName._vec4:
                     return "vec4(1.0) - {0}";
+                case GLTypeName._dvec4:
+                    return "dvec4(1.0) - {0}";
+                case GLTypeName._ivec4:
+                    return "ivec4(1) - {0}";
+                case GLTypeName._uvec4:
+                    return "uvec4(1) - {0}";
             }
             throw new InvalidOperationException();
         }
         protected override List<GLInput> GetInputs()
         {
-            return new List<GLInput>()
-            {
-                new GLInput("Value", GLTypeName._float, GLTypeName._vec2, GLTypeName._vec3, GLTypeName._vec4)
-            };
+            InputValue = new GLInput("Value", NumericTypes);
+            return new List<GLInput>() { InputValue };
         }
         public static MaterialFuncInfo GetInfo()
         {

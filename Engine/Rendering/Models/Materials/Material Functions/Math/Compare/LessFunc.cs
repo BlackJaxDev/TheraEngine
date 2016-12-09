@@ -6,15 +6,9 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Rendering.Models.Materials
 {
-    public class LessFunc : TwoArgFunc
+    public class LessFunc : ComparableFunc
     {
-        public LessFunc(GLTypeName argTypes) : base(
-            new GLInput("A", argTypes),
-            new GLInput("B", argTypes),
-            new GLOutput("Result", GLTypeName._bool))
-        {
-
-        }
+        public LessFunc() : base() { }
         protected override string GetOperator() { return "<"; }
         public static MaterialFuncInfo GetInfo()
         {
