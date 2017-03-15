@@ -1,18 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Drawing;
+using System.Threading;
+using System.Reflection;
+using System.Collections;
+using System.Collections.Generic;
 using System.Windows.Forms;
+using System.Security.Permissions;
+using CustomEngine.Input;
 using CustomEngine.Rendering;
 using CustomEngine.Rendering.HUD;
 using CustomEngine.Rendering.DirectX;
-using System.Security.Permissions;
-using System.Reflection;
 using CustomEngine.Rendering.OpenGL;
-using System.Threading;
-using System;
-using System.Drawing;
-using CustomEngine.Input;
-using System.Linq;
-using CustomEngine.Input.Devices;
-using System.Collections;
 
 namespace CustomEngine
 {
@@ -39,13 +37,10 @@ namespace CustomEngine
                 ControlStyles.Opaque |
                 ControlStyles.ResizeRedraw,
                 true);
-            SetRenderLibrary();
-            AddViewport(new LocalPlayerController());
-        }
 
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
+            //if (_context == null)
+                CreateContext();
+            AddViewport(new LocalPlayerController());
         }
 
         public static RenderPanel HoveredPanel;
@@ -55,6 +50,7 @@ namespace CustomEngine
         private HudManager _globalHud;
         public List<Viewport> _viewports = new List<Viewport>();
         private ColorF4 _backColor = Color.Lavender;
+        private bool _attachedToEngine = false;
 
         public HudManager GlobalHud
         {
@@ -66,47 +62,42 @@ namespace CustomEngine
             get => _backColor;
             set => _backColor = value;
         }
-        public void SetRenderLibrary()
-        {
-            switch (Engine.RenderLibrary)
-            {
-                case RenderLibrary.OpenGL:
-                    if (_context is GLWindowContext)
-                        return;
-                    _context?.Dispose();
-                    _context = new GLWindowContext(this);
-                    break;
-                case RenderLibrary.Direct3D11:
-                    if (_context is DXWindowContext)
-                        return;
-                    _context?.Dispose();
-                    _context = new DXWindowContext(this);
-                    break;
-                default:
-                    return;
-            }
-            _context.Capture(true);
-        }
+        
         /// <summary>
         /// Disables rendering until PopUpdate is called, unless there are other update calls on the stack.
         /// </summary>
-        public void PushUpdate() { ++_updateCounter; }
+        public void PushUpdate()
+        {
+            ++_updateCounter;
+        }
         /// <summary>
         /// Ends the last PushUpdate call. Rendering may not resume unless the update stack is empty.
         /// </summary>
-        public void PopUpdate() { if ((_updateCounter = Math.Max(_updateCounter - 1, 0)) == 0) Invalidate(); }
-        public void CaptureContext() { _context?.Capture(); }
+        public void PopUpdate()
+        {
+            if ((_updateCounter = Math.Max(_updateCounter - 1, 0)) == 0)
+                Invalidate();
+        }
+        public void CaptureContext()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(CaptureContext));
+                return;
+            }
+            _context?.Capture();
+        }
         protected override void OnPaintBackground(PaintEventArgs e) { }
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (_updateCounter > 0)
-                return;
+            //if (_updateCounter > 0)
+            //    return;
 
-            PushUpdate();
             if (_context == null || _context.IsContextDisposed())
                 base.OnPaint(e);
             else if (Monitor.TryEnter(_context))
             {
+                //PushUpdate();
                 try
                 {
                     _context.Capture();
@@ -115,9 +106,12 @@ namespace CustomEngine
                     //_context.ErrorCheck();
                     //_context.Flush();
                 }
-                finally { Monitor.Exit(_context); }
+                finally
+                {
+                    Monitor.Exit(_context);
+                    //PopUpdate();
+                }
             }
-            PopUpdate();
         }
         //protected override void OnMouseEnter(EventArgs e)
         //{
@@ -149,23 +143,29 @@ namespace CustomEngine
             //Engine.Renderer.PushRenderArea(region);
             //Engine.Renderer.CropRenderArea(region);
         }
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            if (_context == null)
-                SetRenderLibrary();
-            _context.ContextChanged += OnContextChanged;
-            _context.ResetOccured += OnReset;
-        }
-        protected override void DestroyHandle()
-        {
-            DisposeContext();
-            base.DestroyHandle();
-        }
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            DisposeContext();
-            base.OnHandleDestroyed(e);
-        }
+        //protected override void OnLoad(EventArgs e)
+        //{
+        //    if (_context == null)
+        //        SetRenderLibrary();
+        //    base.OnLoad(e);
+        //}
+        //protected override void OnHandleCreated(EventArgs e)
+        //{
+        //    if (_context == null)
+        //        SetRenderLibrary();
+        //    _context.ContextChanged += OnContextChanged;
+        //    _context.ResetOccured += OnReset;
+        //}
+        //protected override void DestroyHandle()
+        //{
+        //    DisposeContext();
+        //    base.DestroyHandle();
+        //}
+        //protected override void OnHandleDestroyed(EventArgs e)
+        //{
+        //    DisposeContext();
+        //    base.OnHandleDestroyed(e);
+        //}
         protected virtual void OnReset(object sender, EventArgs e)
         {
             _context?.Initialize();
@@ -182,6 +182,33 @@ namespace CustomEngine
         {
             DisposeContext();
             base.Dispose(disposing);
+        }
+        public void CreateContext()
+        {
+            switch (Engine.RenderLibrary)
+            {
+                case RenderLibrary.OpenGL:
+                    if (_context is GLWindowContext)
+                        return;
+                    _context?.Dispose();
+                    _context = new GLWindowContext(this);
+                    break;
+                case RenderLibrary.Direct3D11:
+                    if (_context is DXWindowContext)
+                        return;
+                    _context?.Dispose();
+                    _context = new DXWindowContext(this);
+                    break;
+                default:
+                    return;
+            }
+            if (_context != null)
+            {
+                _context.ContextChanged += OnContextChanged;
+                _context.ResetOccured += OnReset;
+                _context.Capture(true);
+                _context.Initialize();
+            }
         }
         private void DisposeContext()
         {
@@ -200,9 +227,7 @@ namespace CustomEngine
                 _viewports[i].ViewportCountChanged(i, _viewports.Count, Engine.TwoPlayerPref, Engine.ThreePlayerPref);
         }
         public Viewport GetViewport(int index)
-        {
-            return index >= 0 && index < _viewports.Count ? _viewports[index] : null;
-        }
+            => index >= 0 && index < _viewports.Count ? _viewports[index] : null;
         public void RemoveViewport(LocalPlayerController owner)
         {
             if (_viewports.Contains(owner.Viewport))
@@ -213,22 +238,36 @@ namespace CustomEngine
             }
         }
 
-        public IEnumerator<Viewport> GetEnumerator() { return ((IEnumerable<Viewport>)_viewports).GetEnumerator(); }
-        IEnumerator IEnumerable.GetEnumerator() { return ((IEnumerable<Viewport>)_viewports).GetEnumerator(); }
+        public IEnumerator<Viewport> GetEnumerator()
+            => ((IEnumerable<Viewport>)_viewports).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+            => ((IEnumerable<Viewport>)_viewports).GetEnumerator();
 
         public void AttachToEngine()
         {
+            Redraw = new Action(Refresh);
+            _attachedToEngine = true;
             _context?.Initialize();
             Engine.RegisterRenderTick(RenderTick);
         }
         public void DetachFromEngine()
         {
-            DisposeContext();
             Engine.UnregisterRenderTick(RenderTick);
+            DisposeContext();
+            _attachedToEngine = false;
         }
+        private Action Redraw;
+        private double _time = 0.0;
         public void RenderTick(object sender, FrameEventArgs e)
         {
+            _time += e.Time;
             //Invalidate();
+            if (_time > 0.05)
+            {
+                BeginInvoke(Redraw);
+                _time = 0.0;
+            }
+            //Thread.Sleep(40);
         }
     }
 }
