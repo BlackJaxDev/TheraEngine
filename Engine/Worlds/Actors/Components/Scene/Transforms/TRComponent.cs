@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace CustomEngine.Worlds.Actors.Components
 {
+    /// <summary>
+    /// Translates first, then rotates.
+    /// </summary>
     public class TRComponent : PositionComponent
     {
         public TRComponent() : base()
@@ -57,7 +60,7 @@ namespace CustomEngine.Worlds.Actors.Components
                 Matrix4.CreateTranslation(-translation) * InverseLocalMatrix);
             _translation = LocalMatrix.GetPoint();
         }
-        internal override void OriginRebased(Vec3 newOrigin)
+        protected internal override void OriginRebased(Vec3 newOrigin)
         {
             Translation -= newOrigin;
         }
