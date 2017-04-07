@@ -12,9 +12,13 @@ namespace CustomEngine.Worlds.Actors
 {
     public class BoxActor : Actor<StaticMeshComponent>
     {
-        public BoxActor(string name, PhysicsDriverInfo info) : base(true)
+        public BoxActor(string name, PhysicsDriverInfo info, Vec3 halfExtents, Vec3 translation, Rotator rotation, Material m) : base(true)
         {
             _name = name;
+            BoundingBox box = new BoundingBox(halfExtents, Vec3.Zero);
+            StaticMesh model = new StaticMesh(_name + "_Model", box);
+            model.RigidChildren.Add(new StaticRigidSubMesh(box.GetMesh(false), box, m, _name + "_Mesh"));
+            RootComponent = new StaticMeshComponent(model, translation, rotation, Vec3.One, info);
             Initialize();
         }
         public override void OnSpawned(World world)
@@ -27,28 +31,7 @@ namespace CustomEngine.Worlds.Actors
         }
         protected override StaticMeshComponent OnConstruct()
         {
-            PhysicsDriverInfo floorInfo = new PhysicsDriverInfo()
-            {
-                BodyInfo = new RigidBodyConstructionInfo(
-                       20.0f, null,
-                       /*new DefaultMotionState(Matrix4.CreateFromAxisAngle(Vec3.Forward, 10.0f)),*/
-                       new BoxShape(new Vec3(20.0f, 0.5f, 20.0f)))
-                {
-                    Restitution = 0.5f,
-                },
-                CollisionEnabled = true,
-                SimulatePhysics = false,
-                Group = CustomCollisionGroup.StaticWorld,
-                CollidesWith = CustomCollisionGroup.DynamicWorld | CustomCollisionGroup.Characters,
-            };
-            BoundingBox floorBox = new BoundingBox(new Vec3(20.0f, 0.5f, 20.0f), Vec3.Zero);
-            StaticMesh floorModel = new StaticMesh(_name + "_Model", floorBox);
-            floorModel.RigidChildren.Add(new StaticRigidSubMesh(floorBox.GetMesh(false), floorBox, Material.GetDefaultMaterial(), _name + "_Mesh"));
-            StaticMeshComponent floorComp = new StaticMeshComponent(
-                floorModel, new Vec3(0.0f, 10.0f, 0.0f),
-                new Rotator(0.0f, 0.0f, 0.0f, Rotator.Order.YPR),
-                Vec3.One, floorInfo);
-            return floorComp;
+            return RootComponent;
         }
     }
 }
