@@ -5,9 +5,9 @@ using CustomEngine.Input;
 
 namespace CustomEngine.Tests
 {
-    public class CharacterGameMode : GameMode<CharacterPawn>
+    public class TestGameMode : CharacterGameMode
     {
-        public CharacterGameMode()
+        public TestGameMode()
         {
 
         }
@@ -26,7 +26,7 @@ namespace CustomEngine.Tests
                 Engine.World.SpawnActor(pawn, FindSpawnPoint());
             }
         }
-        public Matrix4 FindSpawnPoint()
+        public override Matrix4 FindSpawnPoint()
         {
             return Matrix4.Identity;
         }
@@ -34,7 +34,7 @@ namespace CustomEngine.Tests
         {
             throw new NotImplementedException();
         }
-        public void OnKilled(CharacterPawn pawn)
+        public override void OnKilled(CharacterPawn pawn)
         {
 
         }
