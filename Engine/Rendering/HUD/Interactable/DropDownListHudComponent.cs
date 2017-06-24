@@ -5,9 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TheraEngine.Rendering.HUD.Functions
+namespace TheraEngine.Rendering.HUD
 {
-    public class DropDownListHudComponent : DockableHudComponent
+    public delegate void DelScrolling(bool up);
+    public class DropDownListHudComponent : InteractableHudComponent
     {
         [Category("Events")]
         public event DelScrolling Scrolled;
