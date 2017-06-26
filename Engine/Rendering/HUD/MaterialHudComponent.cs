@@ -9,20 +9,15 @@ using TheraEngine.Rendering.Textures;
 
 namespace TheraEngine.Rendering.HUD
 {
-    public class TextureHudComponent : DockableHudComponent, I2DRenderable
+    public class MaterialHudComponent : DockableHudComponent, I2DRenderable
     {
-        public TextureHudComponent()
+        public MaterialHudComponent(Material m)
         {
             PrimitiveData quad = PrimitiveData.FromQuads(Culling.Back, PrimitiveBufferInfo.JustPositions(), VertexQuad.ZUpQuad(_region.Width, _region.Height, true));
-            _quad = new PrimitiveManager(quad, Material.GetUnlitTextureMaterial());
-        }
-        public TextureHudComponent(TextureReference texture)
-        {
-            PrimitiveData quad = PrimitiveData.FromQuads(Culling.Back, PrimitiveBufferInfo.JustPositions(), VertexQuad.ZUpQuad(_region.Width, _region.Height, true));
-            _quad = new PrimitiveManager(quad, Material.GetUnlitTextureMaterial(texture));
+            _quad = new PrimitiveManager(quad, m);
         }
 
-        PrimitiveManager _quad;
+        private PrimitiveManager _quad;
 
         public bool HasTransparency => _quad.Material.HasTransparency;
 
@@ -31,15 +26,13 @@ namespace TheraEngine.Rendering.HUD
             BoundingRectangle r = base.Resize(parentRegion);
             VertexBuffer buffer = _quad.Data[0];
             Vec3* data = (Vec3*)buffer.Address;
-            data[0] = new Vec3(Region.BottomLeft, 0.0f);
-            data[1] = new Vec3(Region.BottomRight, 0.0f);
-            data[2] = new Vec3(Region.TopLeft, 0.0f);
-            data[3] = new Vec3(Region.TopRight, 0.0f);
+            data[0] = new Vec3(Region.BottomLeft, -2.0f);
+            data[1] = new Vec3(Region.BottomRight, -2.0f);
+            data[2] = new Vec3(Region.TopLeft, -2.0f);
+            data[3] = new Vec3(Region.TopRight, -2.0f);
             return r;
         }
         public void Render()
-        {
-            _quad.Render(WorldMatrix, Matrix3.Identity);
-        }
+            => _quad.Render(WorldMatrix, Matrix3.Identity);
     }
 }
