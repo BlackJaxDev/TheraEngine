@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using TheraEditor.Wrappers;
 using TheraEngine;
 using TheraEngine.Files;
 using TheraEngine.Input.Devices;
@@ -18,7 +19,7 @@ using TheraEngine.Worlds.Actors;
 
 namespace TheraEditor.Windows.Forms
 {
-    public partial class Editor : FormBase
+    public partial class Editor : BorderlessFormBase
     {
         private static Editor _instance;
         public static Editor Instance => _instance ?? (_instance = new Editor());
@@ -344,35 +345,55 @@ namespace TheraEditor.Windows.Forms
             Engine.World.EndPlay();
         }
 
-        private void toolStripTextBox1_TextChanged(object sender, EventArgs e)
+        private void ToolStripTextBox1_TextChanged(object sender, EventArgs e)
         {
             //if (float.TryParse(toolStripTextBox1.Text, out float fps))
             //    Engine.TargetRenderFreq = fps;
         }
 
-        private void renderPanel1_DragDrop(object sender, DragEventArgs e)
+        private void RenderPanel1_DragDrop(object sender, DragEventArgs e)
         {
-            return;
+            
         }
 
-        private void renderPanel1_DragEnter(object sender, DragEventArgs e)
+        private void RenderPanel1_DragEnter(object sender, DragEventArgs e)
         {
-            return;
+            BaseFileWrapper file = contentTree.DragNode as BaseFileWrapper;
+            if (file == null)
+                return;
+
+            FileObject instance = file.FileObject;
+            if (instance is IActor actor)
+            {
+                if (!actor.IsSpawned)
+                {
+                    Engine.World.SpawnActor(actor);
+                    EditorHud hud = _editorCameraPawn.Hud as EditorHud;
+                    hud.HighlightedComponent = actor.RootComponent;
+                    hud.MouseDown();
+                }
+            }
         }
 
-        private void renderPanel1_DragLeave(object sender, EventArgs e)
+        private void RenderPanel1_DragLeave(object sender, EventArgs e)
         {
-            return;
+            EditorHud hud = _editorCameraPawn.Hud as EditorHud;
+            if (hud.DragComponent != null)
+            {
+                Engine.World.DespawnActor(hud.DragComponent.OwningActor);
+                hud.DragComponent = null;
+                hud.MouseUp();
+            }
         }
 
-        private void renderPanel1_DragOver(object sender, DragEventArgs e)
+        private void RenderPanel1_DragOver(object sender, DragEventArgs e)
         {
-            return;
+            
         }
 
-        private void renderPanel1_GiveFeedback(object sender, GiveFeedbackEventArgs e)
+        private void RenderPanel1_GiveFeedback(object sender, GiveFeedbackEventArgs e)
         {
-            return;
+            
         }
 
         //private void BtnMaximize_Click(object sender, EventArgs e)
@@ -396,6 +417,14 @@ namespace TheraEditor.Windows.Forms
             else
                 e.Cancel = true;
             base.OnFormClosing(e);
+        }
+
+        private void ActorPropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            if (actorPropertyGrid.SelectedObject is ObjectBase obj)
+            {
+                obj.OnPropertyChanged(e.OldValue, e.ChangedItem.PropertyDescriptor.Name);
+            }
         }
 
         #region Borderless Form
