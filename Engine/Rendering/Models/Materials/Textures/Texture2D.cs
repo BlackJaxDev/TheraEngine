@@ -10,8 +10,43 @@ namespace TheraEngine.Rendering.Textures
         Texture3D,
         TextureCubeMap
     }
-    public class Texture2D : BaseRenderState, IDisposable
+    public abstract class BaseRenderTexture : BaseRenderState, IDisposable
     {
+        public event Action PrePushData;
+        public event Action PostPushData;
+
+        protected void OnPrePushData() => PrePushData?.Invoke();
+        protected void OnPostPushData() => PostPushData?.Invoke();
+
+        public BaseRenderTexture(EObjectType type) : base(type) { }
+        public BaseRenderTexture(EObjectType type, int bindingId) : base(type, bindingId) { }
+        
+        public EPixelInternalFormat InternalFormat { get; set; }
+        public EPixelFormat PixelFormat { get; set; }
+        public EPixelType PixelType { get; set; }
+
+        public abstract ETexTarget TextureTarget { get; }
+
+        public static T[] GenTextures<T>(int count) where T : BaseRenderTexture
+            => Engine.Renderer.CreateObjects<T>(EObjectType.Texture, count);
+
+        public void Bind()
+            => Engine.Renderer.BindTexture(TextureTarget, BindingId);
+        public void Clear(ColorF4 clearColor)
+            => Engine.Renderer.ClearTexImage(BindingId, TextureTarget, clearColor);
+
+        protected override int CreateObject()
+            => Engine.Renderer.CreateTextures(TextureTarget, 1)[0];
+        protected override void OnGenerated()
+            => PushData();
+
+        public abstract void PushData();
+    }
+    public class Texture2D : BaseRenderTexture
+    {
+        public static Texture2D[] GenTextures(int count)
+            => Engine.Renderer.CreateObjects<Texture2D>(EObjectType.Texture, count);
+
         public Texture2D() : this(null) { }
         public Texture2D(int bindingId) : base(EObjectType.Texture, bindingId) => Init(null);
         public Texture2D(params Bitmap[] mipmaps) : base(EObjectType.Texture) => Init(mipmaps);
@@ -47,15 +82,11 @@ namespace TheraEngine.Rendering.Textures
         }
         
         private int _width, _height;
-        private EPixelInternalFormat _internalFormat;
-        private EPixelFormat _pixelFormat;
-        private EPixelType _pixelType;
-        private ETexTarget _textureTarget = ETexTarget.Texture2D;
         private Bitmap[] _mipmaps;
 
-        public EPixelInternalFormat InternalFormat { get => _internalFormat; set => _internalFormat = value; }
-        public EPixelFormat PixelFormat { get => _pixelFormat; set => _pixelFormat = value; }
-        public EPixelType PixelType { get => _pixelType; set => _pixelType = value; }
+        public override ETexTarget TextureTarget => ETexTarget.Texture2D;
+        public int Width => _width;
+        public int Height => _height;
         public Bitmap[] Mipmaps
         {
             get => _mipmaps;
@@ -67,35 +98,16 @@ namespace TheraEngine.Rendering.Textures
             }
         }
 
-        public int Width => _width;
-        public int Height => _height;
-
-        public event Action PrePushData;
-        public event Action PostPushData;
-        
-        public static Texture2D[] GenTextures(int count)
-            => Engine.Renderer.CreateObjects<Texture2D>(EObjectType.Texture, count);
-
-        public void AttachToFrameBuffer(int frameBufferBindingId, EFramebufferAttachment attachment, int mipLevel = 0)
-        {
-            Engine.Renderer.AttachTextureToFrameBuffer(frameBufferBindingId, attachment, BindingId, mipLevel);
-        }
-
-        public void Bind()
-        {
-            Engine.Renderer.BindTexture(_textureTarget, BindingId);
-        }
-        public void PushData()
+        public override void PushData()
         {
             if (RenderPanel.NeedsInvoke(PushData, RenderPanel.PanelType.Rendering))
                 return;
 
             Bind();
-
-            PrePushData?.Invoke();
+            OnPrePushData();
 
             if (_mipmaps == null || _mipmaps.Length == 0)
-                Engine.Renderer.PushTextureData(_textureTarget, 0, InternalFormat, _width, _height, PixelFormat, PixelType, IntPtr.Zero);
+                Engine.Renderer.PushTextureData(TextureTarget, 0, InternalFormat, _width, _height, PixelFormat, PixelType, IntPtr.Zero);
             else
                 for (int i = 0; i < _mipmaps.Length; ++i)
                 {
@@ -103,19 +115,19 @@ namespace TheraEngine.Rendering.Textures
                     if (bmp != null)
                     {
                         BitmapData data = bmp.LockBits(new Rectangle(0, 0, _width, _height), ImageLockMode.ReadOnly, bmp.PixelFormat);
-                        Engine.Renderer.PushTextureData(_textureTarget, i, InternalFormat, _width, _height, PixelFormat, PixelType, data.Scan0);
+                        Engine.Renderer.PushTextureData(TextureTarget, i, InternalFormat, _width, _height, PixelFormat, PixelType, data.Scan0);
                         bmp.UnlockBits(data);
                     }
                     else
-                        Engine.Renderer.PushTextureData(_textureTarget, i, InternalFormat, _width, _height, PixelFormat, PixelType, IntPtr.Zero);
+                        Engine.Renderer.PushTextureData(TextureTarget, i, InternalFormat, _width, _height, PixelFormat, PixelType, IntPtr.Zero);
                 }
 
-            Engine.Renderer.TexParameter(_textureTarget, ETexParamName.TextureBaseLevel, 0);
-            Engine.Renderer.TexParameter(_textureTarget, ETexParamName.TextureMaxLevel, _mipmaps == null ? 0 : _mipmaps.Length - 1);
-            Engine.Renderer.TexParameter(_textureTarget, ETexParamName.TextureMinLod, 0);
-            Engine.Renderer.TexParameter(_textureTarget, ETexParamName.TextureMaxLod, _mipmaps == null ? 0 : _mipmaps.Length - 1);
+            Engine.Renderer.TexParameter(TextureTarget, ETexParamName.TextureBaseLevel, 0);
+            Engine.Renderer.TexParameter(TextureTarget, ETexParamName.TextureMaxLevel, _mipmaps == null ? 0 : _mipmaps.Length - 1);
+            Engine.Renderer.TexParameter(TextureTarget, ETexParamName.TextureMinLod, 0);
+            Engine.Renderer.TexParameter(TextureTarget, ETexParamName.TextureMaxLod, _mipmaps == null ? 0 : _mipmaps.Length - 1);
 
-            PostPushData?.Invoke();
+            OnPostPushData();
         }
         public void Resize(int width, int height)
         {
@@ -138,10 +150,6 @@ namespace TheraEngine.Rendering.Textures
 
             PushData();
         }
-        protected override int CreateObject()
-            => Engine.Renderer.CreateTextures(ETexTarget.Texture2D, 1)[0];
-        protected override void OnGenerated()
-            => PushData();
 
         protected override void Dispose(bool disposing)
         {
