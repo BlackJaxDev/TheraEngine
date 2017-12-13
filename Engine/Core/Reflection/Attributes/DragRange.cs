@@ -2,11 +2,11 @@
 
 namespace TheraEngine.Core.Reflection.Attributes
 {
-    public class DragRangeAttribute : Attribute
+    public class DragRange : Attribute
     {
         public float Minimum { get; set; }
         public float Maximum { get; set; }
-        public DragRangeAttribute(float min, float max)
+        public DragRange(float min, float max)
         {
             Minimum = min;
             Maximum = max;

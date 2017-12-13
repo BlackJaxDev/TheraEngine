@@ -2,9 +2,9 @@
 using System;
 using System.Drawing;
 
-namespace TheraEngine.Worlds
+namespace TheraEngine.Physics
 {
-    public class WorldDebugDrawer : DebugDraw
+    public class BulletDebugDrawer : DebugDraw
     {
         private DebugDrawModes _mode = DebugDrawModes.None;
         public override DebugDrawModes DebugMode

@@ -1,14 +1,13 @@
-﻿using BulletSharp;
-using TheraEngine.Files;
+﻿using TheraEngine.Files;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 
-namespace TheraEngine.Rendering
+namespace TheraEngine.Physics
 {
     [Flags]
-    public enum CustomCollisionGroup : short
+    public enum TCollisionGroup : short
     {
         All             = -1,
         None            = 0x0000,
@@ -24,80 +23,9 @@ namespace TheraEngine.Rendering
     }
     public delegate void MatrixUpdate(Matrix4 worldMatrix);
     public delegate void SimulationUpdate(bool isSimulating);
-    public interface IPhysicsDrivable
-    {
-        PhysicsDriver PhysicsDriver { get; }
-        Matrix4 WorldMatrix { get; }
-    }
-    public class PhysicsConstructionInfo
-    {
-        public bool CollisionEnabled = true;
-        public bool SimulatePhysics = true;
-        public CustomCollisionGroup CollisionGroup = CustomCollisionGroup.Default;
-        public CustomCollisionGroup CollidesWith = CustomCollisionGroup.All;
-
-        private float _mass = 1.0f;
-        public MotionState MotionState = null;
-        private CollisionShape _collisionShape = null;
-        public Vec3 LocalInertia = Vec3.Zero;
-
-        public bool AdditionalDamping = false;
-        public float AdditionalDampingFactor = 0.005f;
-        public float AdditionalLinearDampingThresholdSqr = 0.01f;
-        public float AngularDamping = 0.0f;
-        public float AngularSleepingThreshold = 1.0f;
-        public float Friction = 0.5f;
-        public float LinearDamping = 0.0f;
-        public float AdditionalAngularDampingThresholdSqr = 0.01f;
-        public float Restitution = 0.0f;
-        public float RollingFriction = 0.0f;
-        public Matrix4 InitialWorldTransform = Matrix4.Identity;
-        public float LinearSleepingThreshold = 0.8f;
-        public float AdditionalAngularDampingFactor = 0.01f;
-
-        public CollisionShape CollisionShape
-        {
-            get => _collisionShape;
-            set
-            {
-                _collisionShape = value;
-                if (CollisionShape != null)
-                    LocalInertia = CollisionShape.CalculateLocalInertia(Mass);
-            }
-        }
-        public float Mass
-        {
-            get => _mass;
-            set
-            {
-                _mass = value;
-                if (CollisionShape != null)
-                    LocalInertia = CollisionShape.CalculateLocalInertia(Mass);
-            }
-        }
-
-        public RigidBodyConstructionInfo ForBullet()
-        {
-            return new RigidBodyConstructionInfo(Mass, MotionState, CollisionShape, LocalInertia)
-            {
-                AdditionalDamping = AdditionalDamping,
-                AdditionalDampingFactor = AdditionalDampingFactor,
-                AdditionalLinearDampingThresholdSqr = AdditionalLinearDampingThresholdSqr,
-                AngularDamping = AngularDamping,
-                AngularSleepingThreshold = AngularSleepingThreshold,
-                Friction = Friction,
-                LinearDamping = LinearDamping,
-                AdditionalAngularDampingThresholdSqr = AdditionalAngularDampingThresholdSqr,
-                Restitution = Restitution,
-                RollingFriction = RollingFriction,
-                StartWorldTransform = InitialWorldTransform,
-                LinearSleepingThreshold = LinearSleepingThreshold,
-                AdditionalAngularDampingFactor = AdditionalAngularDampingFactor,
-            };
-        }
-    }
-    public delegate void PhysicsEndContact(IPhysicsDrivable me, IPhysicsDrivable other);
-    public delegate void PhysicsOverlap(IPhysicsDrivable me, IPhysicsDrivable other, ManifoldPoint point);
+    public delegate void PhysicsEndContact(ICollidable me, ICollidable other);
+    public delegate void PhysicsOverlap(ICollidable me, ICollidable other, ManifoldPoint point);
+    
     public class PhysicsDriver : FileObject
     {
         public event PhysicsOverlap BeginOverlap, EndOverlap, OnHit;
@@ -105,24 +33,38 @@ namespace TheraEngine.Rendering
         public event MatrixUpdate TransformChanged;
         public event SimulationUpdate SimulationStateChanged;
 
-        public PhysicsDriver(IPhysicsDrivable owner, PhysicsConstructionInfo info)
+        public PhysicsDriver(ICollidable owner, TRigidBodyConstructionInfo info)
         {
             _owner = owner;
             _collisionEnabled = info.CollisionEnabled;
             _simulatingPhysics = info.SimulatePhysics;
             _group = info.CollisionGroup;
             _collidesWith = info.CollidesWith;
-            using (var bulletInfo = info.ForBullet())
-                CollisionObject = new RigidBody(bulletInfo);
+            CollisionObject = Engine.Physics.NewRigidBody(info);
         }
-
-        public PhysicsDriver(IPhysicsDrivable owner, PhysicsConstructionInfo info, MatrixUpdate func)
+        public PhysicsDriver(ICollidable owner, TRigidBodyConstructionInfo info, MatrixUpdate func)
             : this(owner, info)
             => TransformChanged += func;
-        public PhysicsDriver(IPhysicsDrivable owner, PhysicsConstructionInfo info, MatrixUpdate mtxFunc, SimulationUpdate simFunc)
+        public PhysicsDriver(ICollidable owner, TRigidBodyConstructionInfo info, MatrixUpdate mtxFunc, SimulationUpdate simFunc)
             : this(owner, info, mtxFunc)
             => SimulationStateChanged += simFunc;
-        
+
+        public PhysicsDriver(ICollidable owner, TSoftBodyConstructionInfo info)
+        {
+            _owner = owner;
+            _collisionEnabled = info.CollisionEnabled;
+            _simulatingPhysics = info.SimulatePhysics;
+            _group = info.CollisionGroup;
+            _collidesWith = info.CollidesWith;
+            CollisionObject = Engine.Physics.NewSoftBody(info);
+        }
+        public PhysicsDriver(ICollidable owner, TSoftBodyConstructionInfo info, MatrixUpdate func)
+            : this(owner, info)
+            => TransformChanged += func;
+        public PhysicsDriver(ICollidable owner, TSoftBodyConstructionInfo info, MatrixUpdate mtxFunc, SimulationUpdate simFunc)
+            : this(owner, info, mtxFunc)
+            => SimulationStateChanged += simFunc;
+
         private Vec3
             _previousLinearFactor = Vec3.One,
             _previousAngularFactor = Vec3.One;
@@ -134,21 +76,21 @@ namespace TheraEngine.Rendering
         private bool _simulatingPhysics;
         private bool _isSpawned;
         [TSerialize("CollisionGroup")]
-        private CustomCollisionGroup _group;
+        private TCollisionGroup _group;
         [TSerialize("CollidesWith")]
-        private CustomCollisionGroup _collidesWith;
+        private TCollisionGroup _collidesWith;
 
-        private IPhysicsDrivable _owner;
-        private RigidBody _collision;
+        private ICollidable _owner;
+        private TRigidBody _collision;
         private ThreadSafeList<PhysicsDriver> _overlapping = new ThreadSafeList<PhysicsDriver>();
 
         [Browsable(false)]
-        public IPhysicsDrivable Owner => _owner;
+        public ICollidable Owner => _owner;
         [Browsable(false)]
         public ThreadSafeList<PhysicsDriver> Overlapping => _overlapping;
         [Browsable(false)]
         [TSerialize]
-        public RigidBody CollisionObject
+        public TCollisionObject CollisionObject
         {
             get => _collision;
             set
@@ -161,7 +103,7 @@ namespace TheraEngine.Rendering
                     wasInWorld = _collision.IsInWorld;
                     if (wasInWorld && Engine.World != null)
                     {
-                        Engine.World.PhysicsScene.RemoveRigidBody(_collision);
+                        Engine.World.PhysicsWorld.RemoveRigidBody(_collision);
                         if (_simulatingPhysics)
                             UnregisterTick(ETickGroup.PostPhysics, ETickOrder.Scene, Tick);
                     }
@@ -254,7 +196,7 @@ namespace TheraEngine.Rendering
                     _collision.CollisionFlags |= CollisionFlags.NoContactResponse;
 
                 if (_collision != null && _collision.IsInWorld)
-                    _collision.BroadphaseProxy.CollisionFilterMask = (CollisionFilterGroups)(short)(_collisionEnabled ? _collidesWith : CustomCollisionGroup.None);
+                    _collision.BroadphaseProxy.CollisionFilterMask = (CollisionFilterGroups)(short)(_collisionEnabled ? _collidesWith : TCollisionGroup.None);
             }
         }
         [Category("Physics Driver")]
@@ -288,7 +230,7 @@ namespace TheraEngine.Rendering
             }
         }
         [Category("Physics Driver")]
-        public CustomCollisionGroup CollisionGroup
+        public TCollisionGroup CollisionGroup
         {
             get => _group;
             set
@@ -301,7 +243,7 @@ namespace TheraEngine.Rendering
             }
         }
         [Category("Physics Driver")]
-        public CustomCollisionGroup CollidesWith
+        public TCollisionGroup CollidesWith
         {
             get => _collidesWith;
             set
@@ -310,7 +252,7 @@ namespace TheraEngine.Rendering
                     return;
                 _collidesWith = value;
                 if (_collision != null && _collision.IsInWorld)
-                    _collision.BroadphaseProxy.CollisionFilterMask = (CollisionFilterGroups)(short)(_collisionEnabled ? _collidesWith : CustomCollisionGroup.None);
+                    _collision.BroadphaseProxy.CollisionFilterMask = (CollisionFilterGroups)(short)(_collisionEnabled ? _collidesWith : TCollisionGroup.None);
             }
         }
         [Category("Physics Driver")]
@@ -356,7 +298,7 @@ namespace TheraEngine.Rendering
                 return;
 
             //if (Engine.World != null)
-                Engine.World.PhysicsScene.AddRigidBody(_collision, (short)_group, _collisionEnabled ? (short)_collidesWith : (short)CustomCollisionGroup.None);
+                Engine.World.PhysicsScene.AddRigidBody(_collision, (short)_group, _collisionEnabled ? (short)_collidesWith : (short)TCollisionGroup.None);
 
             if (_simulatingPhysics)
                 RegisterTick(ETickGroup.PostPhysics, ETickOrder.Scene, Tick);
@@ -397,15 +339,15 @@ namespace TheraEngine.Rendering
             /*await Task.Run(() => */TransformChanged?.Invoke(transform)/*)*/;
         }
 
-        internal void InvokeHit(IPhysicsDrivable other, ManifoldPoint cp)
+        internal void InvokeHit(ICollidable other, ManifoldPoint cp)
         {
             OnHit?.Invoke(Owner, other, cp);
         }
-        internal void InvokeBeginOverlap(IPhysicsDrivable other, ManifoldPoint cp)
+        internal void InvokeBeginOverlap(ICollidable other, ManifoldPoint cp)
         {
             BeginOverlap?.Invoke(Owner, other, cp);
         }
-        internal void InvokeEndOverlap(IPhysicsDrivable other, ManifoldPoint cp)
+        internal void InvokeEndOverlap(ICollidable other, ManifoldPoint cp)
         {
             EndOverlap?.Invoke(Owner, other, cp);
         }
