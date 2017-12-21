@@ -53,8 +53,8 @@ namespace TheraEngine.Input
         {
             _input.WantsInputsRegistered -= RegisterInput;
             int index = (int)_index;
-            if (index >= 0 && index < Engine.ActivePlayers.Count)
-                Engine.ActivePlayers.RemoveAt(index);
+            if (index >= 0 && index < Engine.LocalPlayers.Count)
+                Engine.LocalPlayers.RemoveAt(index);
         }
 
         private Viewport _viewport;
