@@ -131,7 +131,7 @@ float ReadShadowMap(in vec3 fragPosWS, in vec3 N, in float NoL, in BaseLight lig
     float depth = texture(light.ShadowMap, fragCoord.xy).r;
 
 	//Hard shadow
-    float shadow = (fragCoord.z - bias) > depth ? 0.0 : 1.0;        
+    float shadow = (fragCoord.z - bias) > depth ? 0.0f : 1.0f;        
 
 	//PCF shadow
     //float shadow = 0.0;
@@ -185,7 +185,7 @@ vec3 CalcColor(BaseLight light, vec3 N, vec3 V, vec3 L, vec3 fragPosWS, float at
 	vec3 color = (kD * albedoOpacity.rgb / PI + spec) * radiance * NoL;
 	vec3 ambient = light.Color * light.AmbientIntensity;
 	float shadow = ReadShadowMap(fragPosWS, N, NoL, light);
-	return (ambient + color) * ambOcc * shadow;
+	return (ambient + color * shadow) * ambOcc;
 }
 
 vec3 CalcDirLight(DirLight light, vec3 N, vec3 V, vec3 fragPosWS, vec4 albedoOpacity, vec4 rmsi, float ambOcc)
@@ -246,7 +246,6 @@ vec3 CalcTotalLight(vec3 N, vec3 fragPosWS, vec4 albedoOpacity, vec4 rmsi, float
 
     return totalLight;
 }
-
 vec3 ViewPosFromDepth(float depth, vec2 uv)
 {
     float z = depth * 2.0f - 1.0f;
@@ -254,7 +253,6 @@ vec3 ViewPosFromDepth(float depth, vec2 uv)
     vec4 viewSpacePosition = InvProjMatrix * clipSpacePosition;
     return viewSpacePosition.xyz / viewSpacePosition.w;
 }
-
 void main()
 {
     vec2 uv = FragPos.xy;
@@ -263,7 +261,7 @@ void main()
 
     vec4 AlbedoOpacity = texture(Texture0, uv);
     vec3 Normal = texture(Texture1, uv).rgb;
-	vec4 RMSI = texture(Texture2, uv);
+    vec4 RMSI = vec4(texture(Texture2, uv).rgb, 1.0f);
     float Depth = texture(Texture4, uv).r;
 
     vec3 FragPosVS = ViewPosFromDepth(Depth, uv);
@@ -300,6 +298,5 @@ void main()
     occlusion = pow(1.0f - (occlusion / kernelSize), SSAOPower);
 
     vec3 totalLight = CalcTotalLight(Normal, FragPosWS, AlbedoOpacity, RMSI, occlusion);
-
     OutColor = vec4(AlbedoOpacity.rgb * totalLight, 1.0f);
 }
