@@ -37,6 +37,7 @@
             this.ContentTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(60)))));
             this.ContentTree.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.ContentTree.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ContentTree.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
             this.ContentTree.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.ContentTree.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(170)))), ((int)(((byte)(170)))), ((int)(((byte)(170)))));
             this.ContentTree.HighlightBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
