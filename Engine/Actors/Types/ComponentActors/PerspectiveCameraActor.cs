@@ -9,8 +9,8 @@ namespace TheraEngine.Actors.Types
 
         public PerspectiveCamera Camera
         {
-            get => (PerspectiveCamera)RootComponent.CameraRef;
-            set => RootComponent.CameraRef = value;
+            get => (PerspectiveCamera)RootComponent.CameraRef.File;
+            set => RootComponent.CameraRef.File = value;
         }
         
         protected override CameraComponent OnConstruct()
