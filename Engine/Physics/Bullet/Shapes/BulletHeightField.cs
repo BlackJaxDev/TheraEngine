@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using BulletSharp;
+using TheraEngine.Core.Reflection.Attributes.Serialization;
 
 namespace TheraEngine.Physics.Bullet.Shapes
 {
@@ -19,27 +20,30 @@ namespace TheraEngine.Physics.Bullet.Shapes
             get => Shape.LocalScaling;
             set => Shape.LocalScaling = value;
         }
-        
+
         public BulletHeightField(
             int heightStickWidth,
             int heightStickLength,
             Stream heightfieldData,
             float heightScale,
             float minHeight,
-            float maxHeight, 
+            float maxHeight,
             int upAxis,
             PhyScalarType heightDataType,
             bool flipQuadEdges)
-            => Shape = new HeightfieldTerrainShape(
-                heightStickWidth,
-                heightStickLength,
-                heightfieldData,
-                heightScale,
-                minHeight,
-                maxHeight,
-                upAxis,
-                heightDataType,
-                flipQuadEdges);
+        {
+            Shape = new HeightfieldTerrainShape(
+                  heightStickWidth,
+                  heightStickLength,
+                  heightfieldData,
+                  heightScale,
+                  minHeight,
+                  maxHeight,
+                  upAxis,
+                  heightDataType,
+                  flipQuadEdges);
+            Shape.SetUseDiamondSubdivision();
+        }
         
         #region Collision Shape Methods
         public override void GetBoundingSphere(out Vec3 center, out float radius)
