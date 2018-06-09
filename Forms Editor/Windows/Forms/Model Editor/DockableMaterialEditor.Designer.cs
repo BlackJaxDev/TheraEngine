@@ -35,7 +35,6 @@
             // 
             this.materialControl1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.materialControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(43)))), ((int)(((byte)(50)))));
-            this.materialControl1.CameraFovY = 45F;
             this.materialControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.materialControl1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(170)))), ((int)(((byte)(170)))), ((int)(((byte)(170)))));
             this.materialControl1.Location = new System.Drawing.Point(0, 0);
