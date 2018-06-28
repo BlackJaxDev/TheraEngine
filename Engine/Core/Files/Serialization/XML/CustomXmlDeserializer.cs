@@ -12,8 +12,9 @@ namespace TheraEngine.Files.Serialization
     public partial class CustomXmlSerializer
     {
         private XMLReader _reader;
-        private string _filePath;
-        
+        private string _rootFilePath;
+        private TFileObject _rootFileObject;
+
         public unsafe static Type DetermineType(string filePath)
         {
             Type t = null;
@@ -49,10 +50,11 @@ namespace TheraEngine.Files.Serialization
         /// <summary>
         /// Reads a file from the stream as xml.
         /// </summary>
-        public unsafe object Deserialize(string filePath)
+        public unsafe TFileObject Deserialize(string filePath)
         {
-            _filePath = filePath;
-            object obj = null;
+            _rootFileObject = null;
+            _rootFilePath = filePath;
+            TFileObject obj = null;
             using (FileMap map = FileMap.FromFile(filePath))
             using (_reader = new XMLReader(map.Address, map.Length, true))
             {
@@ -68,7 +70,7 @@ namespace TheraEngine.Files.Serialization
                         null,
                         false);
                     //Type t = Type.GetType(_reader.Value.ToString(), false, false);
-                    obj = ReadObject(t);
+                    obj = ReadObject(t) as TFileObject;
                     _reader.EndElement();
 
                     if (obj is TFileObject o)
@@ -112,7 +114,13 @@ namespace TheraEngine.Files.Serialization
             //Create the object
             object obj = SerializationCommon.CreateObject(objType);
             if (obj is TFileObject tobj)
-                tobj.FilePath = _filePath;
+            {
+                if (_rootFileObject == null)
+                    _rootFileObject = tobj;
+                else
+                    tobj.Root = _rootFileObject;
+                tobj.FilePath = _rootFilePath;
+            }
 
             #region Methods
 
@@ -136,11 +144,11 @@ namespace TheraEngine.Files.Serialization
             foreach (MethodInfo m in methods)
             {
                 PreDeserialize pre = m.GetCustomAttribute<PreDeserialize>();
-                if (pre != null && pre.RunForFormats.HasFlag(SerializeFormatFlag.XML))
+                if (pre != null && pre.RunForFormats.HasFlag(ESerializeFormatFlag.XML))
                     preMethods.Add(m);
 
                 PostDeserialize post = m.GetCustomAttribute<PostDeserialize>();
-                if (post != null && post.RunForFormats.HasFlag(SerializeFormatFlag.XML))
+                if (post != null && post.RunForFormats.HasFlag(ESerializeFormatFlag.XML))
                     postMethods.Add(m);
             }
 
