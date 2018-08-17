@@ -38,6 +38,7 @@ namespace TheraEditor.Windows.Forms
                 tblUniforms.RowCount = 0;
                 lstTextures.Clear();
                 lstShaders.Clear();
+                theraPropertyGrid1.TargetFileObject = null;
 
                 if (_material != null)
                 {
@@ -45,17 +46,26 @@ namespace TheraEditor.Windows.Forms
                     
                     theraPropertyGrid1.TargetFileObject = _material.RenderParamsRef;
                     
-                    foreach (ShaderVar shaderVar in _material.Parameters)
+                    for (int i = 0; i < _material.Parameters.Length; ++i)
                     {
+                        ShaderVar shaderVar = _material.Parameters[i];
                         Type valType = ShaderVar.AssemblyTypeAssociations[shaderVar.TypeName];
                         Type varType = shaderVar.GetType();
 
-                        PropGridItem textCtrl = TheraPropertyGrid.InstantiatePropertyEditor(
-                            typeof(PropGridText), new PropGridItemRefPropertyInfo(shaderVar, varType.GetProperty(nameof(ShaderVar.Name))), this);
-                        textCtrl.ValueChanged += RedrawPreview;
+                        //PropGridItem textCtrl = TheraPropertyGrid.InstantiatePropertyEditor(
+                        //    typeof(PropGridText), new PropGridItemRefPropertyInfo(shaderVar, varType.GetProperty(nameof(ShaderVar.Name))), this);
+                        //textCtrl.ValueChanged += RedrawPreview;
+                        Label textCtrl = new Label()
+                        {
+                            Text = Editor.GetSettings().PropertyGridRef.File.SplitCamelCase ? shaderVar.Name.SplitCamelCase() : shaderVar.Name,
+                            TextAlign = ContentAlignment.MiddleRight,
+                            Dock = DockStyle.Top,
+                            AutoSize = false,
+                        };
+                        shaderVar.Renamed += ShaderVar_Renamed;
 
                         PropGridItem valueCtrl = TheraPropertyGrid.InstantiatePropertyEditor(
-                            TheraPropertyGrid.GetControlTypes(valType)[0], new PropGridItemRefPropertyInfo(shaderVar, varType.GetProperty("Value")), this);
+                            TheraPropertyGrid.GetControlTypes(valType)[0], new PropGridItemRefPropertyInfo(shaderVar, varType.GetProperty("Value")) /*new PropGridItemRefIListInfo(_material.Parameters, i)*/, this);
                         valueCtrl.ValueChanged += RedrawPreview;
 
                         tblUniforms.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -95,6 +105,16 @@ namespace TheraEditor.Windows.Forms
 
                 RedrawPreview();
             }
+        }
+
+        private void ShaderVar_Renamed(TObject node, string oldName)
+        {
+            if (!(node is ShaderVar svar))
+                return;
+            int index = Material.Parameters.IndexOf(svar);
+            if (index < 0 || index >= tblUniforms.RowCount)
+                return;
+            tblUniforms.GetControlFromPosition(0, index).Text = svar.Name;
         }
 
         private void Tref_Renamed(TObject node, string oldName)
