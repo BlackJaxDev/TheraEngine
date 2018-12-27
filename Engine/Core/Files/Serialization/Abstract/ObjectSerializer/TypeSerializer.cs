@@ -1,87 +1,53 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using TheraEngine.Core.Memory;
-using TheraEngine.Rendering.Models.Materials;
 
 namespace TheraEngine.Core.Files.Serialization
 {
-    [ObjectSerializerFor(typeof(Type))]
+    [ObjectSerializerFor(typeof(Type), CanSerializeAsString = true)]
     public class TypeSerializer : BaseObjectSerializer
     {
+        #region Tree
         public override void DeserializeTreeToObject()
         {
-            Type arrayType = TreeNode.ObjectType;
+            Type type = TreeNode.ObjectType;
 
-            if (!TreeNode.GetElementContent(arrayType, out object array))
-            {
-                int count = TreeNode.ChildElements.Count;
-
-                IList list;
-                if (arrayType.IsArray)
-                    list = Activator.CreateInstance(arrayType, count) as IList;
-                else
-                    list = Activator.CreateInstance(arrayType) as IList;
-
-                Type elementType = arrayType.GetElementType() ?? arrayType.GenericTypeArguments[0];
-                for (int i = 0; i < count; ++i)
-                {
-                    SerializeElement node = TreeNode.ChildElements[i];
-                    node.MemberInfo.MemberType = elementType;
-                    node.DeserializeTreeToObject();
-
-                    if (list.IsFixedSize)
-                        list[i] = node.Object;
-                    else
-                        list.Add(node.Object);
-                }
-                
-                array = list;
-            }
-
-            TreeNode.Object = array;
+            if (TreeNode.GetElementContent(type, out object literalType))
+                TreeNode.Object = literalType;
+            else
+                Engine.LogWarning($"Element {TreeNode.Name} cannot be parsed as {type.GetFriendlyName()}");
         }
         public override void SerializeTreeFromObject()
         {
-            if (!(TreeNode.Object is IList list))
+            if (!(TreeNode.Object is Type type))
                 return;
 
-            if (!TreeNode.SetElementContent(list))
+            if (!TreeNode.SetElementContent(type))
+                Engine.LogWarning($"{type.GetFriendlyName()} cannot be written as a string.");
+        }
+        #endregion
+
+        #region String
+        public override object ObjectFromString(Type type, string value)
+            => SerializationCommon.CreateType(value);
+        public override bool ObjectToString(object obj, out string str)
+        {
+            if (obj is Type type)
             {
-                Type elemType = list.DetermineElementType();
-                foreach (object o in list)
-                {
-                    SerializeElement element = new SerializeElement(o, new TSerializeMemberInfo(elemType, null));
-                    if (ShouldWriteDefaultMembers || !element.IsObjectDefault())
-                    {
-                        TreeNode.ChildElements.Add(element);
-                        element.SerializeTreeFromObject();
-                    }
-                }
+                str = type.AssemblyQualifiedName;
+                return true;
             }
+            str = null;
+            return false;
         }
-        public override void SerializeTreeToBinary(ref VoidPtr address, TSerializer.WriterBinary binWriter)
-        {
-            throw new NotImplementedException();
-        }
-        public override string SerializeTreeToString()
-        {
-            bool success = TreeNode.GetElementContentAsString(out string value);
-            if (success)
-                return value;
-            throw new InvalidOperationException();
-        }
+        #endregion
+
+        #region Binary
         protected override int OnGetTreeSize(TSerializer.WriterBinary binWriter)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
+        public override void SerializeTreeToBinary(ref VoidPtr address, TSerializer.WriterBinary binWriter)
+            => throw new NotImplementedException();
         public override void DeserializeTreeFromBinary(ref VoidPtr address, TDeserializer.ReaderBinary binReader)
-        {
-            throw new NotImplementedException();
-        }
-        public override void DeserializeTreeFromString(string value)
-        {
-            TreeNode.Object = Type.GetType(value, false, true);
-        }
+            => throw new NotImplementedException();
+        #endregion
     }
 }
