@@ -757,6 +757,16 @@ void main()
                         {
                             kf.Value.Keyframe.Second = kf.Value.SecondInitial;
 
+                            bool syncVals = kf.Value.Keyframe.SyncInOutValues;
+                            bool syncTanMags = kf.Value.Keyframe.SyncInOutTangentMagnitudes;
+                            bool syncTanDirs = kf.Value.Keyframe.SyncInOutTangentDirections;
+                            if (kf.Value.DraggingInValue && kf.Value.DraggingOutValue)
+                            {
+                                kf.Value.Keyframe.SyncInOutValues = false;
+                                kf.Value.Keyframe.SyncInOutTangentDirections = false;
+                                kf.Value.Keyframe.SyncInOutTangentMagnitudes = false;
+                            }
+
                             if (kf.Value.DraggingInValue)
                             {
                                 float inPos = pos.Y + kf.Value.InValueOffset;
@@ -765,7 +775,7 @@ void main()
                                 kf.Value.Keyframe.InValue = inPos;
                                 if (AutoGenerateTangents)
                                 {
-                                    kf.Value.Keyframe.GenerateAdjacentTangents(true, true);
+                                    kf.Value.Keyframe.GenerateAdjacentTangents(true, false);
                                 }
                             }
                             if (kf.Value.DraggingOutValue)
@@ -776,9 +786,17 @@ void main()
                                 kf.Value.Keyframe.OutValue = outPos;
                                 if (AutoGenerateTangents)
                                 {
-                                    kf.Value.Keyframe.GenerateAdjacentTangents(true, true);
+                                    kf.Value.Keyframe.GenerateAdjacentTangents(false, true);
                                 }
                             }
+                            if (AutoGenerateTangents && kf.Value.DraggingInValue && kf.Value.DraggingOutValue)
+                            {
+                                kf.Value.Keyframe.UnifyTangents(EUnifyBias.Average);
+                            }
+
+                            kf.Value.Keyframe.SyncInOutValues = syncVals;
+                            kf.Value.Keyframe.SyncInOutTangentDirections = syncTanDirs;
+                            kf.Value.Keyframe.SyncInOutTangentMagnitudes = syncTanMags;
                         }
                         else
                         {
@@ -812,6 +830,16 @@ void main()
                     {
                         kf.Value.Keyframe.Second = kfSec;
 
+                        bool syncVals = kf.Value.Keyframe.SyncInOutValues;
+                        bool syncTanMags = kf.Value.Keyframe.SyncInOutTangentMagnitudes;
+                        bool syncTanDirs = kf.Value.Keyframe.SyncInOutTangentDirections;
+                        if (kf.Value.DraggingInValue && kf.Value.DraggingOutValue)
+                        {
+                            kf.Value.Keyframe.SyncInOutValues = false;
+                            kf.Value.Keyframe.SyncInOutTangentDirections = false;
+                            kf.Value.Keyframe.SyncInOutTangentMagnitudes = false;
+                        }
+
                         if (kf.Value.DraggingInValue)
                         {
                             float inPos = pos.Y + kf.Value.InValueOffset;
@@ -820,7 +848,7 @@ void main()
                             kf.Value.Keyframe.InValue = inPos;
                             if (AutoGenerateTangents)
                             {
-                                kf.Value.Keyframe.GenerateAdjacentTangents(true, true);
+                                kf.Value.Keyframe.GenerateAdjacentTangents(true, false);
                             }
                         }
                         if (kf.Value.DraggingOutValue)
@@ -831,9 +859,17 @@ void main()
                             kf.Value.Keyframe.OutValue = outPos;
                             if (AutoGenerateTangents)
                             {
-                                kf.Value.Keyframe.GenerateAdjacentTangents(true, true);
+                                kf.Value.Keyframe.GenerateAdjacentTangents(false, true);
                             }
                         }
+                        if (AutoGenerateTangents && kf.Value.DraggingInValue && kf.Value.DraggingOutValue)
+                        {
+                            kf.Value.Keyframe.UnifyTangents(EUnifyBias.Average);
+                        }
+
+                        kf.Value.Keyframe.SyncInOutValues = syncVals;
+                        kf.Value.Keyframe.SyncInOutTangentDirections = syncTanDirs;
+                        kf.Value.Keyframe.SyncInOutTangentMagnitudes = syncTanMags;
                     }
                     else
                     {

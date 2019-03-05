@@ -96,6 +96,16 @@
             this.chkAutoTangents.Text = "Auto Tangents";
             this.chkAutoTangents.Click += new System.EventHandler(this.chkAutoTangents_Click);
             // 
+            // chkSnapToIncrement
+            // 
+            this.chkSnapToIncrement.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            //this.chkSnapToIncrement.Image = ((System.Drawing.Image)(resources.GetObject("chkAutoTangents.Image")));
+            this.chkSnapToIncrement.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.chkSnapToIncrement.Name = "chkSnapToIncrement";
+            this.chkSnapToIncrement.Size = new System.Drawing.Size(88, 22);
+            this.chkSnapToIncrement.Text = "Snap To Increment";
+            this.chkSnapToIncrement.Click += new System.EventHandler(this.chkSnapToIncrement_Click);
+            // 
             // DockablePropAnimFloatGraph
             // 
             this.AllowDrop = true;
@@ -125,5 +135,6 @@
         private TearOffToolStrip tearOffToolStrip1;
         private System.Windows.Forms.ToolStripButton btnZoomExtents;
         private System.Windows.Forms.ToolStripButton chkAutoTangents;
+        private System.Windows.Forms.ToolStripButton chkSnapToIncrement;
     }
 }
