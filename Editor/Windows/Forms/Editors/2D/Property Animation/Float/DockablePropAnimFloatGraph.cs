@@ -17,12 +17,7 @@ namespace TheraEditor.Windows.Forms
         public DockablePropAnimFloatGraph()
         {
             InitializeComponent();
-
-            RenderPanel.AllowDrop = false;
-            RenderPanel.GotFocus += RenderPanel_GotFocus;
-            RenderPanel.MouseEnter += RenderPanel_MouseEnter;
-            RenderPanel.MouseLeave += RenderPanel_MouseLeave;
-
+            
             GameMode = new PropAnimFloatEditorGameMode() { RenderPanel = RenderPanel };
 
             tsPropAnimFloat.RenderMode = ToolStripRenderMode.Professional;
@@ -34,6 +29,7 @@ namespace TheraEditor.Windows.Forms
         public override World World => RenderPanel.World;
         protected override TFileObject File => TargetAnimation;
         protected override IUIRenderPanel RenderPanelGeneric => RenderPanel;
+        public override bool ShouldHideCursor => true;
 
         public PropAnimFloat TargetAnimation
         {
