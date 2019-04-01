@@ -428,7 +428,7 @@
             <param name="data">The data.</param>
             <param name="PlaneDistanceTolerance">The plane distance tolerance.</param>
             <returns>
-            ConvexHull&lt;TVertex, TFace&gt;.
+            ConvexHullCreationResult&lt;TVertex, TFace&gt;.
             </returns>
             <exception cref="T:System.ArgumentNullException">The supplied data is null.</exception>
             <exception cref="T:System.ArgumentNullException">data</exception>
