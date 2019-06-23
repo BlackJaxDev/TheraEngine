@@ -7,13 +7,13 @@ namespace TheraEngine.Core.Maths.MachineLearning
     /// </summary>
     public class AF_TanH : ActivationFunction
     {
-        public override double GetOutputValue(double x)
+        public override double Value(double sum)
         {
-            return Math.Tanh(x);
+            return Math.Tanh(sum);
         }
-        public override double GetOutputDerivative(double x)
+        public override double Derivative(double sum)
         {
-            double y = GetOutputValue(x);
+            double y = Value(sum);
             return 1.0 - y * y;
         }
     }
