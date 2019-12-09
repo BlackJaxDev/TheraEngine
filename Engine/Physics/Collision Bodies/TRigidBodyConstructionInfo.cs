@@ -5,11 +5,17 @@ using TheraEngine.Core.Maths.Transforms;
 
 namespace TheraEngine.Physics
 {
+    public interface ICollisionObjectConstructionInfo
+    {
+        TCollisionShape CollisionShape { get; set; }
+        Matrix4 InitialWorldTransform { get; set; }
+    }
+
     /// <summary>
     /// Contains parameters for constructing a new rigid body.
     /// </summary>
     [TFileDef("Rigid Body Construction Info", "Contains parameters for constructing a new rigid body.")]
-    public class TRigidBodyConstructionInfo : TFileObject
+    public class TRigidBodyConstructionInfo : TFileObject, ICollisionObjectConstructionInfo
     {
         public TRigidBodyConstructionInfo() { }
         public TRigidBodyConstructionInfo(
@@ -36,8 +42,6 @@ namespace TheraEngine.Physics
             DeactivationTime = deactivationTime;
         }
 
-        [TSerialize]
-        public bool IsGhostObject { get; set; } = false;
         [TSerialize]
         public bool SleepingEnabled { get; set; } = true;
         [TSerialize]
